@@ -20,8 +20,11 @@ setuptools.setup(
 
     install_requires=[
         "aws-cdk.core",
+        "aws-cdk.aws_iam",
         "aws-cdk.aws_lambda",
+        "aws-cdk.aws_events",
         "aws-cdk.aws_stepfunctions",
+        "aws-cdk.aws_secretsmanager",
         "aws-cdk.aws_stepfunctions_tasks"
     ],
 
