@@ -12,9 +12,22 @@ class reInventSchedStack(core.Stack):
 
 
         #--
-        #  Functions
+        #  Layers
         #--------------------#
         
+        twitter_layer = aws_lambda.LayerVersion(self, 'twitter_layer',
+            code = aws_lambda.AssetCode('layers/twitter_layer'),
+            compatible_runtimes = [aws_lambda.Runtime.PYTHON_2_7, aws_lambda.Runtime.PYTHON_3_6])
+
+        boto_layer = aws_lambda.LayerVersion(self, 'boto_layer',
+            code = aws_lambda.AssetCode('layers/boto_layer'),
+            compatible_runtimes = [aws_lambda.Runtime.PYTHON_3_6])
+
+
+        #--
+        #  Functions
+        #--------------------#
+
         get_sessions_func = aws_lambda.Function(self, "get_sessions_func", 
             code = aws_lambda.AssetCode('functions/get_sessions_func'),
             handler = "lambda.handler",
