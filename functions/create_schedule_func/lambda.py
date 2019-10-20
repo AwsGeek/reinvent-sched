@@ -96,10 +96,9 @@ def choose_session(sessions):
     return random.choice(subset)
     
 
-def handler(event, context):
+def handler(master, context):
     
     # Sort by date in ascending order
-    master = event['sessions']
     master.sort(key=lambda x: x['timestamp'], reverse=False)
 
     best = []
@@ -151,4 +150,4 @@ def handler(event, context):
             else:
                 notimproved += 1
 
-    return { 'schedule': best }
+    return best
