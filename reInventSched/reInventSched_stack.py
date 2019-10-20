@@ -85,7 +85,6 @@ class reInventSchedStack(core.Stack):
             handler = "lambda.handler",
             runtime = aws_lambda.Runtime.PYTHON_3_6)
 
-
         get_sessions_func = aws_lambda.Function(self, "get_sessions_func", 
             code = aws_lambda.AssetCode('functions/get_sessions_func'),
             handler = "lambda.handler",
@@ -97,6 +96,15 @@ class reInventSchedStack(core.Stack):
             handler = "lambda.handler",
             runtime = aws_lambda.Runtime.PYTHON_3_6,
             timeout = core.Duration.seconds(60))
+
+        tweet_schedule_func = aws_lambda.Function(self, "tweet_schedule_func", 
+            code = aws_lambda.AssetCode('functions/tweet_schedule_func'),
+            handler = "lambda.handler",
+            layers = [boto_layer, twitter_layer], 
+            runtime = aws_lambda.Runtime.PYTHON_3_6,            
+            environment = {
+                'twitter_secret': twitter_secret.secret_arn})
+        twitter_secret.grant_read(tweet_schedule_func.role)
 
         #--
         #  States
@@ -115,6 +123,8 @@ class reInventSchedStack(core.Stack):
             input_path = "$.sessions",
             result_path = "$.schedule")
 
+        tweet_schedule_job = aws_stepfunctions.Task(self, 'tweet_schedule_job', 
+            task = aws_stepfunctions_tasks.InvokeFunction(tweet_schedule_func))
 
         #--
         #  State Machines
@@ -124,7 +134,8 @@ class reInventSchedStack(core.Stack):
             definition = aws_stepfunctions.Chain
                 .start(parse_tweet_job)
                 .next(get_sessions_job)
-                .next(create_schedule_job))
+                .next(create_schedule_job)
+                .next(tweet_schedule_job))
                 
         # A rule to filter reInventSched tweet events
         reinvent_sched_rule = aws_events.Rule(self, "reinvent_sched_rule", 

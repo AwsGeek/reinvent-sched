@@ -19,14 +19,14 @@ def extract_codes(text):
     
     
 def handler(event, context):
-  
+
     user_name = event['user']['screen_name']
-    tweet_id = event['id_str'] 
+    tweet_id = event['id']
 
     text =  event['text']
     if event['truncated'] == True:
         text = event['extended_tweet']['full_text']
 
     codes = extract_codes(text)
-    
-    return { 'user': user_name, 'codes': codes, 'tweet': tweet_id }
+
+    return { 'user_name': user_name, 'codes': codes, 'tweet_id': tweet_id }
