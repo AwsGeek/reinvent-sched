@@ -89,7 +89,9 @@ class reInventSchedStack(core.Stack):
             code = aws_lambda.AssetCode('functions/get_sessions_func'),
             handler = "lambda.handler",
             runtime = aws_lambda.Runtime.PYTHON_3_6,
-            timeout = core.Duration.seconds(60))
+            timeout = core.Duration.seconds(60),
+            environment = {
+                'LOCAL_CACHE_TTL': str(1 * 60 * 60)}) # Cache locally for 1 hour
 
         create_schedule_func = aws_lambda.Function(self, "create_schedule_func", 
             code = aws_lambda.AssetCode('functions/create_schedule_func'),
