@@ -1,24 +1,9 @@
 
 ![Architecture](reInventSched.jpeg)
 
-### Dev Environment ###
-#### AWS Cloud 9 #### 
-Cloud 9 is the IDE used for authoring code used in Lambda functions and for CDK stack defintion. 
-
-#### AWS CDK #### 
-The AWS CDK is used to manage and deploy the AWS infrastructure associated with the service. 
-
-#### Python #### 
-Python is the language of choice and used for both the AWS CDK and Lambda function implementation
-
 ### AWS Architecture ###
 ### Twitter ####
 Twitter is the public interface to this service. Users interact with the service by tweeting reInvent schedule requests that include session codes they'd like to attend. For example:
-
-```
-Hey @reInventSched, make a schedule that includes svs215 svs343 
-con213 api304 api308 arc307 arc316 arc410 dat335 gpsbus210 api316
-```
 
 ![Request](reInventSchedRequest.jpg)
 
@@ -34,6 +19,8 @@ EventBridge is used as an event bus that delivers Twitter requests to the servic
 ####  AWS Step Functions #### 
 Step Functions is used to oechestrate execution of Lambda functions that parse requests, scrape web pages, and generate schedules in response to user reuquests. 
 
+![Request](reInventSchedResponse.jpg)
+
 #### Amazon DynamoDB #### 
 DynamoDB acts as a temporary cache for session information that has been scraped from the reInvent web site. 
 
@@ -46,6 +33,17 @@ Secrets Manager is used to securely manage the set of Twitter credentials that u
 
 #### Amazon CloudWatch #### 
 CloudWatch is used to monitor service events and to access service logs, particularly those from Lambda functions, when debugging, 
+
+### Dev Environment ###
+#### AWS Cloud 9 #### 
+Cloud 9 is the IDE used for authoring code used in Lambda functions and for CDK stack defintion. 
+
+#### AWS CDK #### 
+The AWS CDK is used to manage and deploy the AWS infrastructure associated with the service. 
+
+#### Python #### 
+Python is the language of choice and used for both the AWS CDK and Lambda function implementation
+
 
 ```
 $ source .env/bin/activate
