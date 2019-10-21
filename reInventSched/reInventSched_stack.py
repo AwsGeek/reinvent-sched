@@ -4,6 +4,7 @@ from aws_cdk import (
     aws_iam,
     aws_lambda,
     aws_events,
+    aws_dynamodb,
     aws_apigateway,
     aws_stepfunctions,
     aws_events_targets,
@@ -15,6 +16,13 @@ class reInventSchedStack(core.Stack):
 
     def __init__(self, scope: core.Construct, id: str, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
+
+
+        # A cache to temporarily hold session info
+        session_cache_table = aws_dynamodb.Table(self, 'session_cache_table',
+          partition_key = { 'name': 'code', 'type': aws_dynamodb.AttributeType.STRING },
+          billing_mode = aws_dynamodb.BillingMode.PAY_PER_REQUEST,
+          time_to_live_attribute = 'expires')
 
 
         #--
@@ -44,6 +52,7 @@ class reInventSchedStack(core.Stack):
         #  Functions
         #--------------------#
 
+        # Handles CRC validation requests from Twitter
         twitter_crc_func = aws_lambda.Function(self, "twitter_crc_func", 
             code = aws_lambda.AssetCode('functions/twitter_crc_func'),
             handler = "lambda.handler",
@@ -51,8 +60,11 @@ class reInventSchedStack(core.Stack):
             runtime = aws_lambda.Runtime.PYTHON_2_7,
             environment = {
                 'twitter_secret': twitter_secret.secret_arn})
+                
+        # Grant this function the ability to read Twitter credentials                
         twitter_secret.grant_read(twitter_crc_func.role)
 
+        # Handle schedule requests from Twitter
         twitter_webhook_func = aws_lambda.Function(self, "twitter_webhook_func", 
             code = aws_lambda.AssetCode('functions/twitter_webhook_func'),
             handler = "lambda.handler",
@@ -60,9 +72,11 @@ class reInventSchedStack(core.Stack):
             runtime = aws_lambda.Runtime.PYTHON_3_6,
             environment = {
                 'twitter_secret': twitter_secret.secret_arn})
+                
+        # Grant this function permission to read Twitter credentials                
         twitter_secret.grant_read(twitter_webhook_func.role)
         
-        # Allow the function to publish tweets to EventBridge
+        # Grant this function permission to publish tweets to EventBridge
         twitter_webhook_func.add_to_role_policy(
             aws_iam.PolicyStatement(
                 actions = ["events:PutEvents"],
@@ -79,26 +93,36 @@ class reInventSchedStack(core.Stack):
         # Handles twitter CRC validation requests via GET to the webhook
         twitter_api.root.add_method('GET', aws_apigateway.LambdaIntegration(twitter_crc_func))
 
-
+        # Extract relevant info from the tweet, including session codes
         parse_tweet_func = aws_lambda.Function(self, "parse_tweet_func", 
             code = aws_lambda.AssetCode('functions/parse_tweet_func'),
             handler = "lambda.handler",
             runtime = aws_lambda.Runtime.PYTHON_3_6)
 
+        # Get session information for requested codes
         get_sessions_func = aws_lambda.Function(self, "get_sessions_func", 
             code = aws_lambda.AssetCode('functions/get_sessions_func'),
             handler = "lambda.handler",
             runtime = aws_lambda.Runtime.PYTHON_3_6,
             timeout = core.Duration.seconds(60),
+            layers = [boto_layer], 
             environment = {
-                'LOCAL_CACHE_TTL': str(1 * 60 * 60)}) # Cache locally for 1 hour
+                'CACHE_TABLE': session_cache_table.table_name,
+                'LOCAL_CACHE_TTL': str(1 * 60 * 60),  # Cache sessions locally for 1 hour
+                'REMOTE_CACHE_TTL': str(12 * 60 * 60)}) # Cache sessions removely for 12 hours
+                
+        # This functions needs permissions to read and write to the table
+        session_cache_table.grant_write_data(get_sessions_func)            
+        session_cache_table.grant_read_data(get_sessions_func)            
 
+        # Create a schedule without conflicts
         create_schedule_func = aws_lambda.Function(self, "create_schedule_func", 
             code = aws_lambda.AssetCode('functions/create_schedule_func'),
             handler = "lambda.handler",
             runtime = aws_lambda.Runtime.PYTHON_3_6,
             timeout = core.Duration.seconds(60))
 
+        # Tweet the response to the user
         tweet_schedule_func = aws_lambda.Function(self, "tweet_schedule_func", 
             code = aws_lambda.AssetCode('functions/tweet_schedule_func'),
             handler = "lambda.handler",
