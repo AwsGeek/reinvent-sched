@@ -14,7 +14,7 @@ API Gateway acts as the public facing endpoint for the service. Twittter sends C
 Lambda is used for all executable code for the service. This includes code associated with the Twitter webhook (CRC validation & request parsing) and schedule generation (parse requests, scrape web pages, and generate schedules). All Lambda functions are writting on Python.
 
 #### Amazon EventBridge #### 
-EventBridge is used as an event bus that delivers Twitter requests to the service. The Lambda function ahndling Twitter requests publishes the associated Tweet as an event on EventBus. A correspoding rule filters these specific events and triggers A Step FUnctions machine to process each event. 
+EventBridge is used as an event bus that delivers Twitter requests to the service. The Lambda function ahndling Twitter requests publishes the associated Tweet as a 'reInventSched' event on EventBus. A correspoding rule filters these specific events and triggers a Step FUnctions machine to process each event. 
 
 ####  AWS Step Functions #### 
 Step Functions is used to oechestrate execution of Lambda functions that parse requests, scrape web pages, and generate schedules in response to user reuquests. 
