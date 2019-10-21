@@ -14,15 +14,19 @@ api = twitter.Api(consumer_key = twitter_secret['consumer_key'],
                   access_token_secret = twitter_secret['access_token_secret'])
 
 def handler(event, context):
+
+    schedule = event['schedule']
+    schedule.sort(key=lambda x: x['timestamp'], reverse=False)
+    
+    # Shortcut of nothing to send
+    if not len(schedule):
+        return
   
     sessions = event['sessions']
     sessions = {x['key']: x for x in sessions}
 
     codes = event['codes']
     
-    schedule = event['schedule']
-    schedule.sort(key=lambda x: x['timestamp'], reverse=False)
-
     lines = [f"{len(schedule)} of {len(codes)} sessions scheduled:"]
     
     for session in schedule:

@@ -29,4 +29,4 @@ def handler(event, context):
 
     codes = extract_codes(text)
 
-    return { 'user_name': user_name, 'codes': codes, 'tweet_id': tweet_id }
+    return { 'user_name': user_name, 'codes': codes, 'num_codes': len(codes), 'tweet_id': tweet_id }
