@@ -135,22 +135,4 @@ def get_sessions_for_code(code):
 
 def handler(code, context):
   
-#    schedule = []  
-
-#    priority = len(codes)
-#    for code in codes:
-        
-#        code = code.strip()
-        
-#        sessions = get_sessions_for_code(code)
-#        for session in sessions:
-#            session['priority'] = priority
-            
-#        priority = priority - 1
-#        schedule = schedule + sessions   
-    
-#    print(f"Retrieved {len(schedule)} sessions including repeats")    
-    
-#    return schedule
-
     return get_sessions_for_code(code)
