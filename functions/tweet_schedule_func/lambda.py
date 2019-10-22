@@ -18,8 +18,9 @@ def handler(event, context):
     schedule = event['schedule']
     schedule.sort(key=lambda x: x['timestamp'], reverse=False)
     
+    # Flatten the list
     sessions = event['sessions']
-    sessions = {x['key']: x for x in sessions}
+    sessions = [item for sublist in sessions for item in sublist]
 
     codes = event['codes']
     
@@ -29,7 +30,7 @@ def handler(event, context):
         start = dateparser.parse(session['start'])
         lines.append(f"*  {session['codex']} - {start:%a %H:%M} at {session['venue']}")
 
-    valid_codes = list(set([x['code'] for x in event['sessions']]))
+    valid_codes = list(set([x['code'] for x in sessions]))
     invalid_codes = [x for x in codes if x not in valid_codes]
         
     scheduled_codes = list(set([x['code'] for x in schedule]))

@@ -149,14 +149,18 @@ class reInventSchedStack(core.Stack):
 
         # Step 2 - Get associated sessions (scrape or cache)
         get_sessions_job = aws_stepfunctions.Task(self, 'get_sessions_job',
-            task = aws_stepfunctions_tasks.InvokeFunction(get_sessions_func),
-            input_path = "$.codes",
+            task = aws_stepfunctions_tasks.InvokeFunction(get_sessions_func))
+
+        # Prepare to get session info in parallel using the Map state
+        get_sessions_map = aws_stepfunctions.Map(self, 'get_sessions_map',
+            items_path = "$.codes",
             result_path = "$.sessions")
-        get_sessions_job.next(create_schedule_job)
+        get_sessions_map.iterator(get_sessions_job)
+        get_sessions_map.next(create_schedule_job)
 
         # Shortcut if no session codes are supplied
         check_num_codes = aws_stepfunctions.Choice(self, 'check_num_codes')
-        check_num_codes.when(aws_stepfunctions.Condition.number_greater_than('$.num_codes', 0), get_sessions_job)
+        check_num_codes.when(aws_stepfunctions.Condition.number_greater_than('$.num_codes', 0), get_sessions_map)
         check_num_codes.otherwise(aws_stepfunctions.Succeed(self, "no_codes"))
 
         # Step 1 - Parse incoming tweet and prepare for scheduling

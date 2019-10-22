@@ -95,9 +95,25 @@ def choose_session(sessions):
     
     return random.choice(subset)
     
+def prioritize_and_flatten(master):
+    
+    # Prioritize based on order
+    priority = len(master)
+    
+    prioritized = []
+    # Prioritize (and flatten) the list of sessions
+    for sessions in master:
+        for session in sessions:
+            session['priority'] = priority
+            prioritized.append(session)
+        priority = priority - 1
+        
+    return prioritized
 
 def handler(master, context):
     
+    master = prioritize_and_flatten(master)
+
     # Sort by date in ascending order
     master.sort(key=lambda x: x['timestamp'], reverse=False)
 
