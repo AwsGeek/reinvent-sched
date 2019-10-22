@@ -136,32 +136,40 @@ class reInventSchedStack(core.Stack):
         #  States
         #--------------------#
 
-        parse_tweet_job = aws_stepfunctions.Task(self, 'parse_tweet_job',
-            task = aws_stepfunctions_tasks.InvokeFunction(parse_tweet_func))
+        # Step 4
+        tweet_schedule_job = aws_stepfunctions.Task(self, 'tweet_schedule_job', 
+            task = aws_stepfunctions_tasks.InvokeFunction(tweet_schedule_func))
 
-        get_sessions_job = aws_stepfunctions.Task(self, 'get_sessions_job',
-            task = aws_stepfunctions_tasks.InvokeFunction(get_sessions_func),
-            input_path = "$.codes",
-            result_path = "$.sessions")
-
+        # Step 3
         create_schedule_job = aws_stepfunctions.Task(self, 'create_schedule_job', 
             task = aws_stepfunctions_tasks.InvokeFunction(create_schedule_func),
             input_path = "$.sessions",
             result_path = "$.schedule")
+        create_schedule_job.next(tweet_schedule_job)
 
-        tweet_schedule_job = aws_stepfunctions.Task(self, 'tweet_schedule_job', 
-            task = aws_stepfunctions_tasks.InvokeFunction(tweet_schedule_func))
+        # Step 2 - Get associated sessions (scrape or cache)
+        get_sessions_job = aws_stepfunctions.Task(self, 'get_sessions_job',
+            task = aws_stepfunctions_tasks.InvokeFunction(get_sessions_func),
+            input_path = "$.codes",
+            result_path = "$.sessions")
+        get_sessions_job.next(create_schedule_job)
+
+        # Shortcut if no session codes are supplied
+        check_num_codes = aws_stepfunctions.Choice(self, 'check_num_codes')
+        check_num_codes.when(aws_stepfunctions.Condition.number_greater_than('$.num_codes', 0), get_sessions_job)
+        check_num_codes.otherwise(aws_stepfunctions.Succeed(self, "no_codes"))
+
+        # Step 1 - Parse incoming tweet and prepare for scheduling
+        parse_tweet_job = aws_stepfunctions.Task(self, 'parse_tweet_job',
+            task = aws_stepfunctions_tasks.InvokeFunction(parse_tweet_func))
+        parse_tweet_job.next(check_num_codes)
 
         #--
         #  State Machines
         #--------------------#
 
         schedule_machine = aws_stepfunctions.StateMachine(self, "schedule_machine",
-            definition = aws_stepfunctions.Chain
-                .start(parse_tweet_job)
-                .next(get_sessions_job)
-                .next(create_schedule_job)
-                .next(tweet_schedule_job))
+            definition = parse_tweet_job)
                 
         # A rule to filter reInventSched tweet events
         reinvent_sched_rule = aws_events.Rule(self, "reinvent_sched_rule", 

@@ -63,9 +63,10 @@ def get_remote_cached_sessions(code):
     except ClientError as e:
         print(e.response['Error']['Message'])
     else:
+        print(response)
         if 'Item' in response:
             item = response['Item']
-            sessions = json.loads(item['cache']['S'])
+            sessions = json.loads(item['sessions'])
     
     return sessions
 

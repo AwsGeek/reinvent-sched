@@ -18,10 +18,6 @@ def handler(event, context):
     schedule = event['schedule']
     schedule.sort(key=lambda x: x['timestamp'], reverse=False)
     
-    # Shortcut of nothing to send
-    if not len(schedule):
-        return
-  
     sessions = event['sessions']
     sessions = {x['key']: x for x in sessions}
 
