@@ -8,16 +8,16 @@ Twitter is the public interface to this service. Users interact with the service
 ![Request](reInventSchedRequest.jpg)
 
 #### Amazon API Gateway ####
-API Gateway acts as the public facing endpoint for the service. Twittter sends CRC validation requests to this endpoint (GET) and forwards subscription events to this endpoint (POST). Thes subscription events are tweets, specifically, mentions of @reInventDemo. 
+API Gateway acts as the public facing endpoint for the service. Twittter sends CRC validation requests to this endpoint (GET) and forwards subscription events to this endpoint (POST). Thes subscription events are tweets, specifically, mentions of @reInventSched. 
 
 #### AWS Lambda #### 
-Lambda is used for all executable code for the service. This includes code associated with the Twitter webhook (CRC validation & request parsing) and schedule generation (parse requests, scrape web pages, and generate schedules). All Lambda functions are writting on Python.
+Lambda is used for all executable code for the service. This includes code associated with the Twitter webhook (CRC validation & request parsing) and schedule generation (parse requests, scrape web pages, and generate schedules). All Lambda functions are writting in Python.
 
 #### Amazon EventBridge #### 
-EventBridge is used as an event bus that delivers Twitter requests to the service. The Lambda function ahndling Twitter requests publishes the associated Tweet as a 'reInventSched' event on EventBus. A correspoding rule filters these specific events and triggers a Step FUnctions machine to process each event. 
+EventBridge is used as an event bus that delivers Twitter requests to the service. The Lambda function handling Twitter requests publishes the associated Tweet as a 'reInventSched' event on EventBus. A corresponding rule filters these specific events and triggers a Step Functions machine to process each event. 
 
 ####  AWS Step Functions #### 
-Step Functions is used to oechestrate execution of Lambda functions that parse requests, scrape web pages, and generate schedules in response to user reuquests. 
+Step Functions is used to orchestrate execution of Lambda functions that parse requests, scrape web pages, and generate schedules in response to user requests. 
 
 ![Request](reInventSchedResponse.jpg)
 
@@ -32,7 +32,7 @@ IAM is used to ensure security best practices and least priviledges are utilized
 Secrets Manager is used to securely manage the set of Twitter credentials that used by several Lambda functions in the service to interact with the Twitter API. 
 
 #### Amazon CloudWatch #### 
-CloudWatch is used to monitor service events and to access service logs, particularly those from Lambda functions, when debugging, 
+CloudWatch is used to monitor service events and to access service logs, particularly those from Lambda functions when debugging, 
 
 ### Dev Environment ###
 #### AWS Cloud 9 #### 
